@@ -22,8 +22,8 @@ print("\ntables for client_rpna\n", rpna_tables)
 #In[]
 client_taq2.query_dataframe('select count(*) from bar')
 
-#In[] Get taq with basic data cleaning 
-client_taq2.query_dataframe("select date,time,symbol,quantile(nbo), quantile(nbb) from bar where date>='2000-03-01' and date<='2000-03-31' and time>='09:30:00' and time<='16:00:00' and nbo<>0 and nbb<>0 and nbo is not NULL and nbb is not NULL and symbol is not NULL and time is not NULL and date is not NULL and nbo>=nbb group by date, time, symbol")
+#In[]
+client_taq2.query_dataframe("select count(*) from bar where date>='2000-03-01' and date<='2000-03-31' and time>='09:30:00' and time<='16:00:00' and nbo<>0 and nbb<>0 and nbo is not NULL and nbb is not NULL and symbol is not NULL and time is not NULL and date is not NULL and nbo>=nbb ")
 
 #In[]
 client_taq.query_dataframe("select min(date) from dtaq_ctm")
