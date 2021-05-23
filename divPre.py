@@ -56,7 +56,8 @@ crsp_div_df
 from multiprocessing.dummy import Pool
 from time import sleep
 
-def foo(cusip, rcrddt):
+def foo(args):
+     cusip, rcrddt = args
      rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
      crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
 
@@ -64,15 +65,9 @@ crsp_div_df['has_DIV_past_yr']=False
 RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
 
 with Pool() as pool:
-     result = [pool.apply_async(foo,(cusip, rcrddt)) for cusip, rcrddt in RCRDDT_list ]
-     while True:
-          result_ready = [r.ready() for r in result]
-          if all(result_ready) is False:
-               print('thread left:',len(result)-sum(result_ready),'/',len(result) )
-               sleep(10)
-          else:
-               break
-     print(all([r.ready() for r in result]))
+     inputs = tuple(RCRDDT_list)
+     length = len(inputs)
+     result = list(tqdm(pool.imap(foo, inputs),total=length))
      pool.close()
      pool.terminate()
      pool.join()
