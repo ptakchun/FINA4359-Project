@@ -53,18 +53,37 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'SHROUT': 'last'})
 crsp_div_df
 #In[]
-crsp_div_df['has_DIV_past_yr']=False
-RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
-for cusip, rcrddt in tqdm(RCRDDT_list):
+from multiprocessing.dummy import Pool
+from time import sleep
+
+def foo(cusip, rcrddt):
      rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
-     # has_DIV_past_yr = ((crsp_div_df.CUSIP==cusip)&(crsp_div_df.date>=rcrddt)&(crsp_div_df.date<=rcrddt_next_year))
      crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
 
+crsp_div_df['has_DIV_past_yr']=False
+RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
+
+with Pool() as pool:
+     result = [pool.apply_async(foo,(cusip, rcrddt)) for cusip, rcrddt in RCRDDT_list ]
+     while True:
+          result_ready = [r.ready() for r in result]
+          if all(result_ready) is False:
+               print('thread left:',len(result)-sum(result_ready),'/',len(result) )
+               sleep(10)
+          else:
+               break
+     print(all([r.ready() for r in result]))
+     pool.close()
+     pool.terminate()
+     pool.join()
+# for cusip, rcrddt in tqdm(RCRDDT_list):
+#      rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
+#      # has_DIV_past_yr = ((crsp_div_df.CUSIP==cusip)&(crsp_div_df.date>=rcrddt)&(crsp_div_df.date<=rcrddt_next_year))
+#      crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
+
 #In[]
-# list(crsp_div_df[crsp_div_df.DIVAMT != 0.0][:100][['CUSIP','RCRDDT']].itertuples())
-# len(list(RCRDDT_list))
-# crsp_div_df.loc[pd.IndexSlice['00003210','1970-11-30':'1971-01-29'],:]
-for cusip, date in crsp_div_df[crsp_div_df.DIVAMT != 0.0].index[:100]:
-     print(cusip,date)
+crsp_div_df.has_DIV_past_yr.sum()
+
+# crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr']
 #In[]
 crsp_df[crsp_df.duplicated(subset=['CUSIP','date'])]
