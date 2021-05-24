@@ -64,7 +64,7 @@ def foo(args):
 crsp_div_df['has_DIV_past_yr']=False
 RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
 
-with Pool(processes=20) as pool:
+with Pool() as pool:
      inputs = tuple(RCRDDT_list)
      length = len(inputs)
      result = list(tqdm(pool.imap(foo, inputs),total=length))
