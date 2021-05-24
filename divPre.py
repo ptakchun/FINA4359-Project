@@ -38,9 +38,8 @@ crsp_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_df['PRC_t-1'] = crsp_df.groupby('CUSIP')['PRC'].shift(1)
 crsp_df.head()
 
-#In[]:
 
-#In[]
+#In[] 
 crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month','PRC_t-1','RETX']].copy()
 # cusips_DISTCD_12 = crsp_div_df[crsp_div_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].CUSIP.unique()
 # crsp_div_df = crsp_div_df[crsp_div_df.CUSIP.isin(cusips_DISTCD_12)]
@@ -68,13 +67,15 @@ crsp_div_df['freq'] = None
 # crsp_div_df['freq'] = crsp_div_df[crsp_div_df.RCRDDT.isna()==False]['DISTCD'].apply(lambda x: x[2:3] if x is not None else None)
 crsp_div_df['freq'] = crsp_div_df[crsp_div_df.DIVAMT != 0.0]['DISTCD'].apply(lambda x: x[2] if x is not None and x[:2]=='12' else None)
 crsp_div_df['freq'] = crsp_div_df.groupby(by=['CUSIP']).fillna(method='ffill', limit=11)['freq']
+crsp_div_df
+
 
 #In[]
-# crsp_div_df.loc[:,['RCRDDT','DIVAMT','DISTCD','freq']][:400]
-# crsp_div_df['DISTCD'].apply(lambda x: x[2:3] if x is not None else None)[:400]
+crsp_div_df['div_yield'] = crsp_div_df['DIVAMT'].apply(lambda x: 0.0 if pd.isna(x) else x)
+crsp_div_df['div_yield'] = list(np.around(crsp_div_df.groupby(by=['CUSIP'])['div_yield'].rolling(window=12, min_periods=0).sum(),decimals=5))
+crsp_div_df['div_yield'] = crsp_div_df['div_yield']/crsp_div_df['PRC']
+crsp_div_df.loc[crsp_div_df['freq'].isna(),'div_yield'] = None
 
-#In[]
-crsp_div_df['div_yield'] = crsp_div_df['DIVAMT'].apply(lambda x: 0.0 if x.isna() else x)
 
 #In[] load compustat bkvlps and merge to crsp_div_df
 compustat_df = pd.read_csv("compustat.zip", compression='zip', header=0,
@@ -92,26 +93,21 @@ cc_df = pd.merge(crsp_div_df.reset_index(), compustat_df[['CUSIP','year','bkvlps
 cc_df.set_index(['CUSIP', 'date'], inplace=True)
 cc_df['BM'] =  cc_df['bkvlps']/cc_df['PRC'] 
 
-#In[]
-cc_df
 
 #In[] Table 1 panel A & B & C
 cusips_DISTCD_12 = pd.Series(cc_df[cc_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].index.get_level_values('CUSIP')).unique()
 
-
-
-
 panel_A = cc_df.loc[pd.IndexSlice[cusips_DISTCD_12,:]]
 fil_A = (panel_A["PRC_t-1"] > 5) & (panel_A.freq.isna() == False) & (panel_A.freq != '2')
 print("Panel A - Firms with a Dividend in the Past Year")
-print(panel_A[fil_A][['MCAP','BM','TURNOVER','SPREAD']].describe())
+print(panel_A[fil_A][['MCAP','BM','TURNOVER','SPREAD','div_yield']].describe().T[['count','mean','std','25%','50%','75%']])
 print('Number of Firm Months', len(panel_A[fil_A]))
 print('Number of Firms', len(pd.Series(panel_A.index.get_level_values('CUSIP')).unique() ))
 
 fil_B = ((cc_df.freq.isna() == True)) & (cc_df["PRC_t-1"] > 5)
 panel_B = cc_df[fil_B]
 print("Panel B - Firms with No Dividend in the Past Year")
-print(panel_B[['MCAP','BM','TURNOVER','SPREAD']].describe())
+print(panel_B[['MCAP','BM','TURNOVER','SPREAD']].describe().T[['count','mean','std','25%','50%','75%']])
 print('Number of Firm Months', len(panel_B))
 print('Number of Firms', len(pd.Series(panel_B.index.get_level_values('CUSIP')).unique() ))
 
