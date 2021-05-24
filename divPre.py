@@ -102,13 +102,13 @@ cusips_DISTCD_12 = pd.Series(cc_df[cc_df.DISTCD.apply(lambda x: x[:2]=='12' if i
 
 
 panel_A = cc_df.loc[pd.IndexSlice[cusips_DISTCD_12,:]]
-fil_A = (panel_A["PRC_t-1"] >= 5) & (panel_A.freq < '6') & (panel_A.freq != '2')
+fil_A = (panel_A["PRC_t-1"] > 5) & (panel_A.freq.isna() == False) & (panel_A.freq != '2')
 print("Panel A - Firms with a Dividend in the Past Year")
 print(panel_A[fil_A][['MCAP','BM','TURNOVER','SPREAD']].describe())
 print('Number of Firm Months', len(panel_A[fil_A]))
 print('Number of Firms', len(pd.Series(panel_A.index.get_level_values('CUSIP')).unique() ))
 
-fil_B = ((cc_df.freq.isna() == True) |  (cc_df.freq >= '6')) & (cc_df["PRC_t-1"] >= 5)
+fil_B = ((cc_df.freq.isna() == True)) & (cc_df["PRC_t-1"] > 5)
 panel_B = cc_df[fil_B]
 print("Panel B - Firms with No Dividend in the Past Year")
 print(panel_B[['MCAP','BM','TURNOVER','SPREAD']].describe())
@@ -119,18 +119,32 @@ print('Number of Firms', len(pd.Series(panel_B.index.get_level_values('CUSIP')).
 
 fil_C = (cc_df["PRC_t-1"] >= 5) & (cc_df.freq < '6')
 s = cc_df[fil_C].freq
-freq_dist = s.groupby(s).count()/ s.groupby(s).count().sum() * 100
+freq_dist = s.groupby(s).count()/ s.groupby(s).count().sum()
+any_freq = s.groupby(s).count().sum()/len(cc_df[(cc_df["PRC_t-1"] >= 5)])
 panel_C = {
-     'Monthly': freq_dist[2],
-     'Quarterly': freq_dist[3],
-     'Semi-Annual': freq_dist[4],
-     'Annual': freq_dist[5],
-     'Unknown Frequency': freq_dist[0] + freq_dist[1]
+     "Pct of Firm Months with Div pre yr":{
+          "Any Freq": any_freq,
+          'Monthly': freq_dist[2]*any_freq,
+          'Quarterly': freq_dist[3]*any_freq,
+          'Semi-Annual': freq_dist[4]*any_freq,
+          'Annual': freq_dist[5]*any_freq,
+          'Unknown Frequency': (freq_dist[0] + freq_dist[1])*any_freq
+     },
+     'Pct of Div Obs': {
+          'Monthly': freq_dist[2],
+          'Quarterly': freq_dist[3],
+          'Semi-Annual': freq_dist[4],
+          'Annual': freq_dist[5],
+          'Unknown Frequency': freq_dist[0] + freq_dist[1]
+          }    
 }
-print("\nPanel C: Pct of Dividend Observations (%)")
-print(pd.Series(panel_C))
+print("\nPanel C: Distribution of Dividend Frequencies(%)")
+print(pd.DataFrame(panel_C)*100)
 
 #In[]
 cusips_DISTCD_12 = pd.Series(cc_df[cc_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].index.get_level_values('CUSIP')).unique()
 cc_df.loc[pd.IndexSlice[cusips_DISTCD_12,:]]
 len(cusips_DISTCD_12)
+
+#In[]
+s.groupby(s).count().sum()/len(cc_df[(cc_df["PRC_t-1"] >= 5)])
