@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from pandas.tseries.offsets import MonthEnd
 import statsmodels.api as sm
 from tqdm import tqdm
+from multiprocessing.dummy import Pool
+pd.set_option('display.max_rows', 500)
+# pd.set_option('display.max_columns', 500)
 
 #In[]
 crsp_df = pd.read_csv("crsp.zip", compression='zip',header=0,
@@ -53,9 +56,6 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'SHROUT': 'last'})
 crsp_div_df
 #In[]
-from multiprocessing.dummy import Pool
-from time import sleep
-
 def foo(args):
      cusip, rcrddt = args
      rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
@@ -64,7 +64,7 @@ def foo(args):
 crsp_div_df['has_DIV_past_yr']=False
 RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
 
-with Pool() as pool:
+with Pool(processes=20) as pool:
      inputs = tuple(RCRDDT_list)
      length = len(inputs)
      result = list(tqdm(pool.imap(foo, inputs),total=length))
@@ -77,15 +77,15 @@ with Pool() as pool:
 #      crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
 
 #In[]
-crsp_div_df.has_DIV_past_yr.sum()
-crsp_div_df.to_pickle('./crsp_div_df.pkl.zip', compression='zip')
+# crsp_div_df.has_DIV_past_yr.sum()
+crsp_div_df.to_pickle('./crsp_div_df2.pkl.zip', compression='zip')
 
 # crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr']
 #In[]
 # crsp_df[crsp_df.duplicated(subset=['CUSIP','date'])]
-crsp_div_df2 = pd.read_pickle('./crsp_div_df.pkl.zip',compression='zip')
-crsp_div_df2
+# crsp_div_df2 = pd.read_pickle('./crsp_div_df.pkl.zip',compression='zip')
+# crsp_div_df2
 #In[]
 
-crsp_div_df2.dropna() == crsp_div_df.dropna()
+crsp_div_df.loc[pd.IndexSlice['N5946510',:],['DCLRDT','DIVAMT','has_DIV_past_yr']]
 
