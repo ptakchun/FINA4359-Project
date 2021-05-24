@@ -43,14 +43,15 @@ crsp_df.head()
 #In[]:
 
 #In[]
-crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month','PRC_t-1']].copy()
+crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month','PRC_t-1','RETX']].copy()
 crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'DCLRDT': 'last',
      'RCRDDT': 'last',
      'DISTCD': 'last',
      'DIVAMT': 'sum',
-     'RET':'max',
+     'RET':'last',
+     'RETX':'last',
      'VOL': 'last',
      'PRC': 'last',
      'PRC_t-1': 'last',
@@ -58,6 +59,9 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'SHROUT': 'last'})
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
 crsp_div_df
+
+#In[]
+crsp_div_df.to_pickle('./crsp_div_df_afterGroupBy.pkl.zip', compression='zip')
 #In[]
 crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_div_df['freq'] = None
@@ -70,9 +74,20 @@ crsp_div_df.loc[:,['RCRDDT','DIVAMT','DISTCD','freq']][:400]
 
 #In[]
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
-crsp_div_df['div_yield'] = crsp_div_df['DIVAMT']
-fil = (crsp_div_df.freq.isna() == False) & (crsp_div_df["PRC_t-1"].isna()==False) & (crsp_div_df["PRC_t-1"] >= 5)
-crsp_div_df[fil][['SPREAD','MCAP','VOL']].describe()
+crsp_div_df['TURNOVER'] = crsp_div_df['VOL'] / crsp_div_df['SHROUT']
 
-#In[]
-crsp_div_df
+crsp_div_df['div_yield'] = crsp_div_df['DIVAMT'].apply(lambda x: 0.0 if x.isna() else x)
+
+
+#In[] panel A & B
+fil_A = (crsp_div_df.freq.isna() == False) & (crsp_div_df["PRC_t-1"].isna()==False) & (crsp_div_df["PRC_t-1"] >= 5) & (crsp_div_df.freq < '6')
+fil_B = (crsp_div_df.freq.isna() == True) |  (crsp_div_df.freq >= '6')
+
+for fil in [fil_A,fil_B]:
+     print(crsp_div_df[fil][['MCAP','TURNOVER','SPREAD']].describe())
+     print('Number of Firm Months', len(crsp_div_df[fil]))
+     print('Number of Firms', len(pd.Series(crsp_div_df.index.get_level_values('CUSIP')).unique() ))
+
+#In[] Panel C:
+s = crsp_div_df[fil_A].freq
+s.groupby(s).count()/1494129 * 100
