@@ -35,6 +35,10 @@ for i in range(1,13):
 
 # %%
 for i in range(1,13):
-     
-    exec('prob = pd.to_numeric(df_' + str(i) + '_ago[\'RET\'], errors=\'coerce\').std() * 100')
-    print('N = ' + str(i) + ': ' + str(round(prob,3)))
+     exec('prob = (df_' + str(i) + '_ago[\'DIVAMT\'] > 0).sum()/df_' + str(i) + '_ago[\'DIVAMT\'].count()')
+     print('N = ' + str(i) + ': ' + str(round(prob,3)))
+
+# %%
+for i in range(1,13):
+     exec('prob = (df_' + str(i) + '_ago[\'DIVAMT\'] > 0).sum()/df_' + str(i) + '_ago[\'DIVAMT\'].count()')
+     print('N = ' + str(i) + ': ' + str(round(prob,3)))
