@@ -7,6 +7,7 @@ from pandas.tseries.offsets import MonthEnd
 from tqdm import tqdm
 from multiprocessing.dummy import Pool
 pd.set_option('display.max_rows', 500)
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
 # pd.set_option('display.max_columns', 500)
 
 #In[]
@@ -42,7 +43,7 @@ crsp_df.head()
 #In[]:
 
 #In[]
-crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month']].copy()
+crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month','PRC_t-1']].copy()
 crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'DCLRDT': 'last',
@@ -52,6 +53,7 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'RET':'max',
      'VOL': 'last',
      'PRC': 'last',
+     'PRC_t-1': 'last',
      'SPREAD': 'last',
      'SHROUT': 'last'})
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
@@ -68,5 +70,9 @@ crsp_div_df.loc[:,['RCRDDT','DIVAMT','DISTCD','freq']][:400]
 
 #In[]
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
-crsp_div_df[crsp_div_df.freq.isna() == True][['SPREAD','MCAP']].describe()
+crsp_div_df['div_yield'] = crsp_div_df['DIVAMT']
+fil = (crsp_div_df.freq.isna() == False) & (crsp_div_df["PRC_t-1"].isna()==False) & (crsp_div_df["PRC_t-1"] >= 5)
+crsp_div_df[fil][['SPREAD','MCAP','VOL']].describe()
 
+#In[]
+crsp_div_df
