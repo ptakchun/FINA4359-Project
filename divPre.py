@@ -1,9 +1,9 @@
 #In[]
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from pandas.tseries.offsets import MonthEnd
-import statsmodels.api as sm
+# import statsmodels.api as sm
 from tqdm import tqdm
 from multiprocessing.dummy import Pool
 pd.set_option('display.max_rows', 500)
@@ -25,8 +25,8 @@ crsp_df = pd.read_csv("crsp.zip", compression='zip',header=0,
 #Data Preprocessing
 crsp_df = crsp_df[(crsp_df.SHRCD.isin(('10','11')))]
 crsp_df = crsp_df[(crsp_df.date <= '2011-12-31')]
-# cusips_DISTCD_12 = crsp_df[crsp_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].CUSIP.unique()
-# crsp_df = crsp_df[crsp_df.CUSIP.isin(cusips_DISTCD_12)]
+cusips_DISTCD_12 = crsp_df[crsp_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].CUSIP.unique()
+crsp_df = crsp_df[crsp_df.CUSIP.isin(cusips_DISTCD_12)]
 
 # crsp_df =  crsp_df[( crsp_df['RET'].apply(lambda x: str(x)[-1].isdigit()) )]
 # crsp_df['RET'] = crsp_df['RET'].astype('float64')
@@ -54,38 +54,19 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'PRC': 'last',
      'SPREAD': 'last',
      'SHROUT': 'last'})
+crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
 crsp_div_df
 #In[]
-def foo(args):
-     cusip, rcrddt = args
-     rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
-     crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
-
-crsp_div_df['has_DIV_past_yr']=False
-RCRDDT_list = crsp_div_df[crsp_div_df.DIVAMT != 0.0].index
-
-with Pool() as pool:
-     inputs = tuple(RCRDDT_list)
-     length = len(inputs)
-     result = list(tqdm(pool.imap(foo, inputs),total=length))
-     pool.close()
-     pool.terminate()
-     pool.join()
-# for cusip, rcrddt in tqdm(RCRDDT_list):
-#      rcrddt_next_year = rcrddt + pd.DateOffset(years=1)
-#      # has_DIV_past_yr = ((crsp_div_df.CUSIP==cusip)&(crsp_div_df.date>=rcrddt)&(crsp_div_df.date<=rcrddt_next_year))
-#      crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr'] = True
+crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
+crsp_div_df['freq'] = None
+crsp_div_df['freq'] = crsp_div_df[crsp_div_df.RCRDDT.isna()==False]['DISTCD'].apply(lambda x: x[2:3] if x is not None else None)
+crsp_div_df['freq'] = crsp_div_df.groupby(by=['CUSIP']).fillna(method='ffill', limit=11)['freq']
 
 #In[]
-# crsp_div_df.has_DIV_past_yr.sum()
-crsp_div_df.to_pickle('./crsp_div_df2.pkl.zip', compression='zip')
+crsp_div_df.loc[:,['RCRDDT','DIVAMT','DISTCD','freq']][:400]
+# crsp_div_df['DISTCD'].apply(lambda x: x[2:3] if x is not None else None)[:400]
 
-# crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr']
 #In[]
-# crsp_df[crsp_df.duplicated(subset=['CUSIP','date'])]
-# crsp_div_df2 = pd.read_pickle('./crsp_div_df.pkl.zip',compression='zip')
-# crsp_div_df2
-#In[]
-
-crsp_div_df.loc[pd.IndexSlice['N5946510',:],['DCLRDT','DIVAMT','has_DIV_past_yr']]
+crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
+crsp_div_df[crsp_div_df.freq.isna() == True][['SPREAD','MCAP']].describe()
 
