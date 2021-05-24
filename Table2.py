@@ -14,6 +14,7 @@ crsp_df = pd.read_csv("crsp.zip", compression='zip',header=0,
                   "COMNAM": str,
                   "TICKER": str,
                    'CUSIP': str})
+
 #Data Preprocessing
 crsp_df = crsp_df[(crsp_df.SHRCD.isin(('10','11')))]
 crsp_df = crsp_df[(crsp_df.date <= '2011-12-31')]
@@ -29,5 +30,26 @@ crsp_df['year'] = crsp_df['date'].dt.year
 crsp_df['month'] = crsp_df['date'].dt.month
 crsp_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_df['PRC_t-1'] = crsp_df.groupby('CUSIP')['PRC'].shift(1)
-#crsp_df['month_since_last_div'] = 
-crsp_df['month_since_last_div'] = crsp_df.groupby('CUSIP').DIVAMT.apply(lambda x: x.ffill().shift())
+# %%
+crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month']].copy()
+crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
+crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
+     'DCLRDT': 'last',
+     'RCRDDT': 'last',
+     'DISTCD': 'last',
+     'DIVAMT': 'sum',
+     'RET':'max',
+     'VOL': 'last',
+     'PRC': 'last',
+     'SPREAD': 'last',
+     'SHROUT': 'last'})
+
+
+# %%
+
+#check to see if there was dividend payment i months ago
+for i in range(1,13):
+     crsp_df['div_' + str(i) + '_month_ago'] = crsp_df.groupby('CUSIP').DIVAMT.apply(lambda x: x.shift(i))
+
+for i in range(1,13):
+     
