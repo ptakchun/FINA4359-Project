@@ -78,7 +78,14 @@ with Pool() as pool:
 
 #In[]
 crsp_div_df.has_DIV_past_yr.sum()
+crsp_div_df.to_pickle('./crsp_div_df.pkl.zip', compression='zip')
 
 # crsp_div_df.loc[pd.IndexSlice[cusip,rcrddt:rcrddt_next_year], 'has_DIV_past_yr']
 #In[]
-crsp_df[crsp_df.duplicated(subset=['CUSIP','date'])]
+# crsp_df[crsp_df.duplicated(subset=['CUSIP','date'])]
+crsp_div_df2 = pd.read_pickle('./crsp_div_df.pkl.zip',compression='zip')
+crsp_div_df2
+#In[]
+
+crsp_div_df2.dropna() == crsp_div_df.dropna()
+
