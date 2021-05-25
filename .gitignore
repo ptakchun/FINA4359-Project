@@ -133,3 +133,4 @@ dmypy.json
 crsp_div_df.pkl
 .DS_Store
 crsp_d.csv.gz
+crsp_d.zip
