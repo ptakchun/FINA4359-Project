@@ -29,14 +29,15 @@ crsp_df = crsp_df[(crsp_df.date <= '2011-12-31')]
 
 # crsp_df =  crsp_df[( crsp_df['RET'].apply(lambda x: str(x)[-1].isdigit()) )]
 # crsp_df['RET'] = crsp_df['RET'].astype('float64')
-crsp_df['year'] = crsp_df['date'].dt.year
-crsp_df['month'] = crsp_df['date'].dt.month
 crsp_df.PRC = crsp_df.PRC.abs()
+t = crsp_df.date.dt
+crsp_df['year'] = t.year
+crsp_df['month'] = t.month
 crsp_df.head()
 
 
 #In[] 
-crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','year','month','PRC_t-1','RETX']].copy()
+crsp_div_df = crsp_df[['date','CUSIP','DCLRDT','RCRDDT','DISTCD','DIVAMT','PRC','VOL','RET','SHROUT','SPREAD','RETX','year','month']].copy()
 # cusips_DISTCD_12 = crsp_div_df[crsp_div_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].CUSIP.unique()
 # crsp_div_df = crsp_div_df[crsp_div_df.CUSIP.isin(cusips_DISTCD_12)]
 crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
@@ -49,15 +50,16 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'RETX':'last',
      'VOL': 'last',
      'PRC': 'last',
-     'PRC_t-1': 'last',
      'SPREAD': 'last',
      'SHROUT': 'last',
-     'year':'last'})
+     'year': 'last',
+     'month': 'last'})
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
 crsp_div_df['TURNOVER'] = crsp_div_df['VOL'] / crsp_div_df['SHROUT']
 crsp_div_df['PRC_t-1'] = crsp_div_df.groupby('CUSIP')['PRC'].shift(1)
 # crsp_div_df.to_pickle('./crsp_div_df_afterGroupBy.pkl.zip', compression='zip')
 crsp_div_df
+
 #In[] Find months with dividend past year
 crsp_div_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 crsp_div_df['freq'] = None
@@ -89,7 +91,6 @@ compustat_df['year'] = compustat_df.fyear.apply(lambda x: x+1)
 cc_df = pd.merge(crsp_div_df.reset_index(), compustat_df[['CUSIP','year','bkvlps']], on=['CUSIP','year'], how='left')
 cc_df.set_index(['CUSIP', 'date'], inplace=True)
 cc_df['BM'] =  cc_df['bkvlps']/cc_df['PRC'] 
-
 
 #In[] Table 1 panel A & B & C
 cusips_DISTCD_12 = pd.Series(cc_df[cc_df.DISTCD.apply(lambda x: x[:2]=='12' if isinstance(x, str) else False)].index.get_level_values('CUSIP')).unique()
