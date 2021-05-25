@@ -20,7 +20,6 @@ crsp_df = pd.read_csv("crsp_d.csv",header=0,
                   "VOL": np.float64,
                   "SHROUT": np.float64,
                   "DIVAMT": np.float64,
-                  "SPREAD": np.float64,
                   "SHRCD":str,
                   "DISTCD":str,
                   "COMNAM": str,
@@ -48,12 +47,14 @@ crsp_div_df.head()
 # crsp_df['RET'] = crsp_df['RET'].astype('float64')
 
 #In[]
-crsp_div_df.head()
+crsp_div_df
+# crsp_df
 
 #In[]
 crsp_div_df['dt'] = None
 crsp_div_df['dt'] = crsp_div_df[crsp_div_df.DIVAMT != 0.0]['DISTCD'].apply(lambda x: 0 if x is not None and x[:2]=='12' else None)
-crsp_div_df['dt'] = crsp_div_df.groupby(by=['CUSIP'])['dt'].ffill() + crsp_div_df.groupby(by=['CUSIP'])['dt'].isna().cumsum()
+g = crsp_div_df.groupby(by=['CUSIP'])['dt']
+crsp_div_df['dt'] = g.ffill() + g.isna().cumsum()
 
 #In[]
 crsp_div_df[:400]
