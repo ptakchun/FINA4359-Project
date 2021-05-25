@@ -47,3 +47,30 @@ for i in range(1,13):
      print('N = ' + str(i) + ': ' + str(round(prob_2,3)))
 
 # %%
+def categorize(row):
+     if row['divamt_3_month_ago'] > 0 & (row['distcd_3_month_ago'].startswith('120') | row['distcd_3_month_ago'].startswith('121') | row['distcd_3_month_ago'].startswith('123')):
+          return 1
+     elif row['divamt_6_month_ago'] > 0 & (row['distcd_6_month_ago'].startswith('120') | row['distcd_6_month_ago'].startswith('121') | row['distcd_6_month_ago'].startswith('123')):
+          return 1
+     elif row['divamt_9_month_ago'] > 0 & (row['distcd_9_month_ago'].startswith('120') | row['distcd_9_month_ago'].startswith('121') | row['distcd_9_month_ago'].startswith('123')):
+          return 1
+     elif row['divamt_12_month_ago'] > 0 & (row['distcd_12_month_ago'].startswith('120') | row['distcd_12_month_ago'].startswith('121') | row['distcd_12_month_ago'].startswith('123')):
+          return 1
+     elif row['divamt_6_month_ago'] > 0 & row['distcd_6_month_ago'].startswith('124'):
+          return 1
+     elif row['divamt_12_month_ago'] > 0 & row['distcd_12_month_ago'].startswith('124'):
+          return 1
+     elif row['divamt_12_month_ago'] > 0 & row['distcd_12_month_ago'].startswith('125'):
+          return 1
+     else:
+          for i in range(1,13):
+               exec('a = row[\'divamt_' + str(i) +'_month_ago\']')
+               cat_2 = False
+               if a > 0:
+                    cat_2 = True
+                    break
+          
+          if cat_2:
+               return 2
+          else:
+               return 3
