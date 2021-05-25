@@ -29,13 +29,9 @@ crsp_df = crsp_df[(crsp_df.date <= '2011-12-31')]
 
 # crsp_df =  crsp_df[( crsp_df['RET'].apply(lambda x: str(x)[-1].isdigit()) )]
 # crsp_df['RET'] = crsp_df['RET'].astype('float64')
-
-crsp_df.PRC = crsp_df.PRC.abs()
-
 crsp_df['year'] = crsp_df['date'].dt.year
 crsp_df['month'] = crsp_df['date'].dt.month
-crsp_df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
-crsp_df['PRC_t-1'] = crsp_df.groupby('CUSIP')['PRC'].shift(1)
+crsp_df.PRC = crsp_df.PRC.abs()
 crsp_df.head()
 
 
@@ -59,6 +55,7 @@ crsp_div_df = crsp_div_df.groupby(by=['CUSIP','date']).agg({
      'year':'last'})
 crsp_div_df['MCAP'] = crsp_div_df['PRC'] * crsp_div_df['SHROUT']
 crsp_div_df['TURNOVER'] = crsp_div_df['VOL'] / crsp_div_df['SHROUT']
+crsp_div_df['PRC_t-1'] = crsp_div_df.groupby('CUSIP')['PRC'].shift(1)
 # crsp_div_df.to_pickle('./crsp_div_df_afterGroupBy.pkl.zip', compression='zip')
 crsp_div_df
 #In[] Find months with dividend past year
