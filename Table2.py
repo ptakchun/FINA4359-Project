@@ -48,22 +48,23 @@ for i in range(1,13):
 
 # %%
 def categorize(row):
-     if row['divamt_3_month_ago'] > 0 & (row['distcd_3_month_ago'].startswith('120') | row['distcd_3_month_ago'].startswith('121') | row['distcd_3_month_ago'].startswith('123')):
+     if row['divamt_3_month_ago'] > 0 and (str(row['distcd_3_month_ago'])[0:3] == '120' or str(row['distcd_3_month_ago'])[0:3] == '121' or str(row['distcd_3_month_ago'])[0:3] == '123'):
           return 1
-     elif row['divamt_6_month_ago'] > 0 & (row['distcd_6_month_ago'].startswith('120') | row['distcd_6_month_ago'].startswith('121') | row['distcd_6_month_ago'].startswith('123')):
+     elif row['divamt_6_month_ago'] > 0 and (str(row['distcd_6_month_ago'])[0:3] == '120' or str(row['distcd_6_month_ago'])[0:3] == '121' or str(row['distcd_6_month_ago'])[0:3] == '123'):
           return 1
-     elif row['divamt_9_month_ago'] > 0 & (row['distcd_9_month_ago'].startswith('120') | row['distcd_9_month_ago'].startswith('121') | row['distcd_9_month_ago'].startswith('123')):
+     elif row['divamt_9_month_ago'] > 0 and (str(row['distcd_9_month_ago'])[0:3] == '120' or str(row['distcd_9_month_ago'])[0:3] == '121' or str(row['distcd_9_month_ago'])[0:3] == '123'):
           return 1
-     elif row['divamt_12_month_ago'] > 0 & (row['distcd_12_month_ago'].startswith('120') | row['distcd_12_month_ago'].startswith('121') | row['distcd_12_month_ago'].startswith('123')):
+     elif row['divamt_12_month_ago'] > 0 and (str(row['distcd_12_month_ago'])[0:3] == '120' or str(row['distcd_12_month_ago'])[0:3] == '121' or str(row['distcd_12_month_ago'])[0:3] == '123'):
           return 1
-     elif row['divamt_6_month_ago'] > 0 & row['distcd_6_month_ago'].startswith('124'):
+     elif row['divamt_6_month_ago'] > 0 and str(row['distcd_6_month_ago'])[0:3] == '124':
           return 1
-     elif row['divamt_12_month_ago'] > 0 & row['distcd_12_month_ago'].startswith('124'):
+     elif row['divamt_12_month_ago'] > 0 and str(row['distcd_12_month_ago'])[0:3] == '124':
           return 1
-     elif row['divamt_12_month_ago'] > 0 & row['distcd_12_month_ago'].startswith('125'):
+     elif row['divamt_12_month_ago'] > 0 and str(row['distcd_12_month_ago'])[0:3] == '125':
           return 1
      else:
           for i in range(1,13):
+               a = 0
                exec('a = row[\'divamt_' + str(i) +'_month_ago\']')
                cat_2 = False
                if a > 0:
@@ -74,3 +75,9 @@ def categorize(row):
                return 2
           else:
                return 3
+
+
+df['category'] = df.apply (lambda row: categorize(row), axis=1)
+
+
+# %%
