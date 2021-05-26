@@ -4,6 +4,8 @@ import numpy as np
 
 # In[]
 
+na_values = ['B','C']
+
 df = pd.read_csv("crsp.zip", compression='zip',header=0,
              parse_dates = ['date','DCLRDT','RCRDDT'],
              dtype={"PRC": np.float64,
@@ -17,7 +19,8 @@ df = pd.read_csv("crsp.zip", compression='zip',header=0,
                   "DISTCD": str,
                   "COMNAM": str,
                   "TICKER": str,
-                   'CUSIP': str})
+                   'CUSIP': str},
+             na_values = na_values)
 
 #Data Preprocessing
 df = df[(df.SHRCD.isin(('10','11')))]
@@ -110,9 +113,14 @@ def categorize(row):
           else:
                return 3
 
-
 df['category'] = df.apply (lambda row: categorize(row), axis=1)
 
 # %%
 df_port1 = df[df['category'] == 1].groupby('date').RET.mean(numeric_only = True)
+df_port2 = df[df['category'] == 2].groupby('date').RET.mean(numeric_only = True)
+df_port3 = df[df['category'] == 3].groupby('date').RET.mean(numeric_only = True)
+print(df_port1.mean())
+print(df_port2.mean())
+print(df_port3.mean())
+
 # %%
