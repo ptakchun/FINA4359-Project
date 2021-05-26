@@ -25,12 +25,14 @@ df = pd.read_csv("crsp.zip", compression='zip',header=0,
 #Data Preprocessing
 df = df[(df.SHRCD.isin(('10','11')))]
 df = df[(df.date <= '2011-12-31')]
-
-df['year'] = df['date'].dt.year
-df['month'] = df['date'].dt.month
 df.PRC = df.PRC.abs()
 
-df = df[ df['DISTCD'].str.startswith('12', na = True) ]
+df['PRC_t-1'] = df.groupby('CUSIP')['PRC'].shift(1)
+df['year'] = df['date'].dt.year
+df['month'] = df['date'].dt.month
+
+df = df[(df.date <= '2011-12-31')]
+df = df[(df['PRC_t-1'] >= 5)]
 
 df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 df = df.groupby(by=['CUSIP','date']).agg({
@@ -109,7 +111,10 @@ def categorize(row):
           row['divamt_7_month_ago'] > 0 or row['divamt_8_month_ago'] > 0 or row['divamt_9_month_ago'] > 0 or \
           row['divamt_10_month_ago'] > 0 or row['divamt_11_month_ago'] > 0 or row['divamt_12_month_ago'] > 0
           if cat_2:
-               return 2
+               if row['divamt_1_month_ago'] > 0:
+                    return 4
+               else:
+                    return 2
           else:
                return 3
 
@@ -119,8 +124,33 @@ df['category'] = df.apply (lambda row: categorize(row), axis=1)
 df_port1 = df[df['category'] == 1].groupby('date').RET.mean(numeric_only = True)
 df_port2 = df[df['category'] == 2].groupby('date').RET.mean(numeric_only = True)
 df_port3 = df[df['category'] == 3].groupby('date').RET.mean(numeric_only = True)
+
+df_L1S2 = df_port1 - df_port2
+df_l1S3 = df_port1 - df_port3
+
 print(df_port1.mean())
 print(df_port2.mean())
 print(df_port3.mean())
+print(df_L1S2.mean())
+print(df_l1S3.mean())
+
+# %%
+
+dict = {}
+for index, row in df.iterrows():
+     a = str(row['CUSIP']) + '-' + str(row['year'])
+     if a in dict:
+          dict[a] = dict[a] + 1
+     else:
+          dict[a] = 1
+# %%
+count={}
+for key, value in dict.items():
+     if value != 12:
+          if key.split('-')[0] in count:
+               print (key.split('-')[0])
+          else:
+               count[key.split('-')[0]] = 1
+
 
 # %%
