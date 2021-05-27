@@ -194,11 +194,11 @@ panel_b = {
           "Portfolio Long [1] and Short [3]":round(df_l1S3.std() * 100,2)
      },
      "Sharpe Ratio":{
-          "[1] Predicted Dividend Month": round((df_port1.mean() - 0.003) / df_port1.std(),2),
-          "[2] All Other Companies with a Dividend in the Last 12 Months": round((df_port2.mean() - 0.003) / df_port2.std(),2),
-          "[3] All Other Companies with NO Dividend in the Last 12 Months": round((df_port3.mean() - 0.003) / df_port3.std(),2),
-          "Portfolio Long [1] and Short [2]": round((df_L1S2.mean() - 0.003) / df_L1S2.std(),2),
-          "Portfolio Long [1] and Short [3]":round((df_l1S3.mean() - 0.003) / df_l1S3.std(),2)
+          "[1] Predicted Dividend Month": round((df_port1.mean() - 0.0029) / df_port1.std(),2),
+          "[2] All Other Companies with a Dividend in the Last 12 Months": round((df_port2.mean() - 0.0029) / df_port2.std(),2),
+          "[3] All Other Companies with NO Dividend in the Last 12 Months": round((df_port3.mean() - 0.0029) / df_port3.std(),2),
+          "Portfolio Long [1] and Short [2]": round((df_L1S2.mean() - 0.0029) / df_L1S2.std(),2),
+          "Portfolio Long [1] and Short [3]":round((df_l1S3.mean() - 0.0029) / df_l1S3.std(),2)
      },
      "1%":{
           "[1] Predicted Dividend Month": round(df_port1.quantile(0.01) * 100,2),
