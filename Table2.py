@@ -23,19 +23,15 @@ df = pd.read_csv("crsp.zip", compression='zip',header=0,
              na_values = na_values)
 
 #Data Preprocessing
-df = df[(df.SHRCD.isin(('10','11')))]
-df = df[(df.date <= '2011-12-31')]
 df.PRC = df.PRC.abs()
 
 df['PRC_t-1'] = df.groupby('CUSIP')['PRC'].shift(1)
 df['year'] = df['date'].dt.year
 df['month'] = df['date'].dt.month
 
-df = df[(df.date <= '2011-12-31')]
-df = df[(df['PRC_t-1'] >= 5)]
-
 df.sort_values(by=['CUSIP','date'], ascending=True, inplace=True)
 df = df.groupby(by=['CUSIP','date']).agg({
+     'SHRCD': 'last',
      'DCLRDT': 'last',
      'RCRDDT': 'last',
      'DISTCD': 'last',
@@ -44,6 +40,7 @@ df = df.groupby(by=['CUSIP','date']).agg({
      'RETX':'last',
      'VOL': 'last',
      'PRC': 'last',
+     'PRC_t-1': 'last',
      'SPREAD': 'last',
      'SHROUT': 'last',
      'year':'last',
@@ -56,6 +53,10 @@ df = df.groupby(by=['CUSIP','date']).agg({
 for i in range(1,13):
      df['divamt_' + str(i) + '_month_ago'] = df.groupby('CUSIP').DIVAMT.apply(lambda x: x.shift(i))
      df['distcd_' + str(i) + '_month_ago'] = df.groupby('CUSIP').DISTCD.apply(lambda x: x.shift(i))
+
+df = df[(df['PRC_t-1'] >= 5)]
+df = df[(df.SHRCD.isin(('10','11')))]
+df = df[(df.date <= '2011-12-31')]
 
 # %%
 
@@ -128,29 +129,11 @@ df_port3 = df[df['category'] == 3].groupby('date').RET.mean(numeric_only = True)
 df_L1S2 = df_port1 - df_port2
 df_l1S3 = df_port1 - df_port3
 
-print(df_port1.mean())
-print(df_port2.mean())
-print(df_port3.mean())
-print(df_L1S2.mean())
-print(df_l1S3.mean())
-
-# %%
-
-dict = {}
-for index, row in df.iterrows():
-     a = str(row['CUSIP']) + '-' + str(row['year'])
-     if a in dict:
-          dict[a] = dict[a] + 1
-     else:
-          dict[a] = 1
-# %%
-count={}
-for key, value in dict.items():
-     if value != 12:
-          if key.split('-')[0] in count:
-               print (key.split('-')[0])
-          else:
-               count[key.split('-')[0]] = 1
-
+print('Table II Panel B')
+print(round(df_port1.mean() * 100,2), round(df_port1.std() * 100,2), round(df_port1.quantile(0.01) * 100,2), round(df_port1.quantile(0.05) * 100,2), round(df_port1.quantile(0.25) * 100,2), round(df_port1.quantile(0.5) * 100,2), round(df_port1.quantile(0.75) * 100,2), round(df_port1.quantile(0.95) * 100,2), round(df_port1.quantile(0.99) * 100,2))
+print(round(df_port2.mean() * 100,2), round(df_port2.std() * 100,2), round(df_port2.quantile(0.01) * 100,2), round(df_port2.quantile(0.05) * 100,2), round(df_port2.quantile(0.25) * 100,2), round(df_port2.quantile(0.5) * 100,2), round(df_port2.quantile(0.75) * 100,2), round(df_port2.quantile(0.95) * 100,2), round(df_port2.quantile(0.99) * 100,2))
+print(round(df_port3.mean() * 100,2), round(df_port3.std() * 100,2), round(df_port3.quantile(0.01) * 100,2), round(df_port3.quantile(0.05) * 100,2), round(df_port3.quantile(0.25) * 100,2), round(df_port3.quantile(0.5) * 100,2), round(df_port3.quantile(0.75) * 100,2), round(df_port3.quantile(0.95) * 100,2), round(df_port3.quantile(0.99) * 100,2))
+print(round(df_L1S2.mean() * 100,2), round(df_L1S2.std() * 100,2), round(df_L1S2.quantile(0.01) * 100,2), round(df_L1S2.quantile(0.05) * 100,2), round(df_L1S2.quantile(0.25) * 100,2), round(df_L1S2.quantile(0.5) * 100,2), round(df_L1S2.quantile(0.75) * 100,2), round(df_L1S2.quantile(0.95) * 100,2), round(df_L1S2.quantile(0.99) * 100,2))
+print(round(df_l1S3.mean() * 100,2), round(df_l1S3.std() * 100,2), round(df_l1S3.quantile(0.01) * 100,2), round(df_l1S3.quantile(0.05) * 100,2), round(df_l1S3.quantile(0.25) * 100,2), round(df_l1S3.quantile(0.5) * 100,2), round(df_l1S3.quantile(0.75) * 100,2), round(df_l1S3.quantile(0.95) * 100,2), round(df_l1S3.quantile(0.99) * 100,2))
 
 # %%
