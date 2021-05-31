@@ -154,18 +154,17 @@ def categorize(row):
           return 1
      elif row['divamt_12_month_ago'] > 0 and str(row['distcd_12_month_ago'])[0:3] == '125':
           return 1
-     else:
+     elif str(row['DISTCD'])[3:3] != '1':
           cat_2 = row['divamt_1_month_ago'] > 0 or row['divamt_2_month_ago'] > 0 or row['divamt_3_month_ago'] > 0 or \
           row['divamt_4_month_ago'] > 0 or row['divamt_5_month_ago'] > 0 or row['divamt_6_month_ago'] > 0 or \
           row['divamt_7_month_ago'] > 0 or row['divamt_8_month_ago'] > 0 or row['divamt_9_month_ago'] > 0 or \
           row['divamt_10_month_ago'] > 0 or row['divamt_11_month_ago'] > 0 or row['divamt_12_month_ago'] > 0
           if cat_2:
-               if row['divamt_1_month_ago'] > 0:
-                    return 4
-               else:
-                    return 2
+               return 2
           else:
                return 3
+     else:
+          return 4   #not categorzied
 
 df['category'] = df.apply (lambda row: categorize(row), axis=1)
 
